@@ -22,8 +22,12 @@
 #include <iostream>
 #include <pthread.h>
 #include <chrono>
+#include <semaphore.h>
 
 using namespace std;
+
+//Se crea la variable del semaforo
+sem_t semaforo;
 
 // Definiremos las funciones que se utilizaran para la sumatoria
 // Función para verificar que la entrada sea un número entero
@@ -57,7 +61,6 @@ int obtenerNumeroEntero() {
 
 
 // función calcular suma de factoriales
-
 // Función para calcular la sumatoria 1
 long long calcularFactorial(long long n) {
     long long factorial = 1;
@@ -69,8 +72,10 @@ long long calcularFactorial(long long n) {
 
 // Estructura para almacenar los parámetros de cada hilo
 struct ThreadParams {
+    // Inicio y fin del subrango
     long long inicio;
     long long fin;
+    // Resultado parcial
     long long resultado_parcial;
 };
 
@@ -80,6 +85,7 @@ void* calcularSumatoriaFactoriales(void* arg) {
     params->resultado_parcial = 0;
 
     for (long long i = params->inicio; i <= params->fin; ++i) {
+        // Calcula el factorial de cada número y lo suma
         params->resultado_parcial += calcularFactorial(i);
     }
 
@@ -89,23 +95,33 @@ void* calcularSumatoriaFactoriales(void* arg) {
 // Función para calcular la suma de factoriales en un rango determinado por el usuario
 void calcularSumatoriaFactorialesParalela(long long limiteInferior, long long limiteSuperior, long long numHilos, long long &resultado1) {
     resultado1 = 0;
+    // Se crean los hilos
     pthread_t threads[numHilos];
+    // Se crean los parámetros para cada hilo
     struct ThreadParams params[numHilos];
+    // Se calcula el tamaño de cada subrango el + 1 sirve para que no se pierda el último número
     long long tamanoSubrango = (limiteSuperior - limiteInferior + 1) / numHilos;
 
+    
     for (long long i = 0; i < numHilos; ++i) {
+        // Se calcula el inicio del subrango, y el i * tamanoSubrango es para que cada hilo empiece donde terminó el anterior
         params[i].inicio = limiteInferior + i * tamanoSubrango;
+        // Si es el último hilo, el fin del subrango es el límite superior 
         params[i].fin = (i == numHilos - 1) ? limiteSuperior : params[i].inicio + tamanoSubrango - 1;
 
+        // Se crea el hilo y se verifica que se haya creado correctamente, donde se pasa la función a ejecutar y los parámetros
         if (pthread_create(&threads[i], NULL, calcularSumatoriaFactoriales, &params[i]) != 0) {
             fprintf(stderr, "Error al crear el hilo %lld\n", i);
             exit(1);
         }
     }
 
+    // Se espera a que cada hilo termine y se suma el resultado parcial de cada uno
     for (long long i = 0; i < numHilos; ++i) {
         pthread_join(threads[i], NULL);
+        sem_wait(&semaforo);
         resultado1 += params[i].resultado_parcial;
+        sem_post(&semaforo);
     }
 }
 
@@ -140,7 +156,9 @@ void calcularSumatoriaPotenciasCuadradasParalela(long long limiteInferior, long 
 
     for (long long i = 0; i < numHilos; ++i) {
         pthread_join(threads[i], NULL);
+        sem_wait(&semaforo);
         resultado2 += params[i].resultado_parcial;
+        sem_post(&semaforo);
     }
 }
 // Función para calcular la sumatoria 3
@@ -174,7 +192,9 @@ void calcularSumatoriaCubosParalela(long long limiteInferior, long long limiteSu
 
     for (long long i = 0; i < numHilos; ++i) {
         pthread_join(threads[i], NULL);
+        sem_wait(&semaforo);
         resultado3 += params[i].resultado_parcial;
+        sem_post(&semaforo);
     }
 }
 // Función para calcular la sumatoria 4
@@ -211,7 +231,9 @@ void calcularSumatoriaParesParalela(long long limiteInferior, long long limiteSu
 
     for (long long i = 0; i < numHilos; ++i) {
         pthread_join(threads[i], NULL);
+        sem_wait(&semaforo);
         resultado4 += params[i].resultado_parcial;
+        sem_post(&semaforo);
     }
 }
 // Función para calcular la sumatoria 5
@@ -247,7 +269,9 @@ void calcularSumatoriaImparesParalela(long long limiteInferior, long long limite
 
     for (long long i = 0; i < numHilos; ++i) {
         pthread_join(threads[i], NULL);
+        sem_wait(&semaforo);
         resultado5 += params[i].resultado_parcial;
+        sem_post(&semaforo);
     }
 }
 // Función para calcular la sumatoria 6
@@ -298,7 +322,9 @@ void calcularSumatoriaFibonacciParalela(long long limiteInferior, long long limi
 
     for (long long i = 0; i < numHilos; ++i) {
         pthread_join(threads[i], NULL);
+        sem_wait(&semaforo);
         resultado6 += params[i].resultado_parcial;
+        sem_post(&semaforo);
     }
 }
 // Función para calcular la sumatoria 7
@@ -348,7 +374,9 @@ void calcularSumatoriaPrimosParalela(long long limiteInferior, long long limiteS
 
     for (long long i = 0; i < numHilos; ++i) {
         pthread_join(threads[i], NULL);
+        sem_wait(&semaforo);
         resultado7 += params[i].resultado_parcial;
+        sem_post(&semaforo);
     }
 }
 // Función para calcular la sumatoria 8
@@ -385,7 +413,9 @@ void calcularSumatoriaParesAlCuadradoParalela(long long limiteInferior, long lon
 
     for (long long i = 0; i < numHilos; ++i) {
         pthread_join(threads[i], NULL);
+        sem_wait(&semaforo);
         resultado8 += params[i].resultado_parcial;
+        sem_post(&semaforo);
     }
 }
 // Función para calcular la sumatoria 9
@@ -421,7 +451,9 @@ void calcularSumatoriaImparesAlCuboParalela(long long limiteInferior, long long 
 
     for (long long i = 0; i < numHilos; ++i) {
         pthread_join(threads[i], NULL);
+        sem_wait(&semaforo);
         resultado9 += params[i].resultado_parcial;
+        sem_post(&semaforo);
     }
 }
 // Función para calcular la sumatoria 10
@@ -459,7 +491,9 @@ void calcularSumatoriaParesAlCuboParalela(long long limiteInferior, long long li
 
     for (long long i = 0; i < numHilos; ++i) {
         pthread_join(threads[i], NULL);
+        sem_wait(&semaforo);
         resultado10 += params[i].resultado_parcial;
+        sem_post(&semaforo);
     }
 }
 // Función para calcular la sumatoria 11
@@ -496,7 +530,9 @@ void calcularSumatoriaPrimosAlCuadradoParalela(long long limiteInferior, long lo
 
     for (long long i = 0; i < numHilos; ++i) {
         pthread_join(threads[i], NULL);
+        sem_wait(&semaforo);
         resultado11 += params[i].resultado_parcial;
+        sem_post(&semaforo);
     }
 }
 // Función para calcular la sumatoria 12
@@ -532,7 +568,9 @@ void calcularSumatoriaSecuenciaAritmeticaParalela(long long limiteInferior, long
 
     for (long long i = 0; i < numHilos; ++i) {
         pthread_join(threads[i], NULL);
+        sem_wait(&semaforo);
         resultado12 += params[i].resultado_parcial;
+        sem_post(&semaforo);
     }
 }
 //Funciones para encontrar mayor y menor
@@ -553,6 +591,9 @@ int main() {
     // Se declaran las variables necesarias
     long long limiteInferior, limiteSuperior, resultado1 = 0, resultado2 = 0, resultado3 = 0, resultado4 = 0, resultado5 = 0, resultado6 = 0, resultado7 = 0, resultado8 = 0, resultado9 = 0, resultado10 = 0, resultado11 = 0, resultado12 = 0;
     long long numHilos;
+
+    //Se inicializa el semaforo
+    sem_init(&semaforo, 0, 1);
 
     // Se imprimen los mensajes de bienvenida y las sumatorias a calcular
     cout << endl;
@@ -729,6 +770,8 @@ int main() {
     // Se imprime el menor de las sumatorias
     cout << "El menor de los resultados es: " << menor << endl;
 
+    // Se destruye el semaforo
+    sem_destroy(&semaforo);
 
     return 0;
 }
